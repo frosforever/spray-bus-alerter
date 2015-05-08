@@ -1,16 +1,27 @@
-import AssemblyKeys._
-
 organization  := "ycf"
 
 version       := "0.1"
 
-scalaVersion  := "2.11.2"
+scalaVersion  := "2.11.6"
 
-scalacOptions := Seq("-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
+scalacOptions ++= Seq(
+  //  "-Xprint:typer", // Turn this on if WartRemover acts up, to see full syntax tree
+  "-deprecation",
+  "-encoding", "UTF-8", // yes, this is 2 args
+  "-feature",
+  "-unchecked",
+  //  "-Xfatal-warnings",       // Treat Warnings as Errors
+  "-Xlint",
+  "-Yno-adapted-args",
+  "-Ywarn-dead-code", // N.B. doesn't work well with the ??? hole
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard",
+  "-Xfuture" // Would be nice to have but does not Play well
+)
 
 libraryDependencies ++= {
-  val akkaV = "2.3.6"
-  val sprayV = "1.3.2"
+  val akkaV = "2.3.10"
+  val sprayV = "1.3.3"
   Seq(
     "io.spray"            %%  "spray-can"     % sprayV,
     "io.spray"            %%  "spray-routing" % sprayV,
@@ -24,5 +35,3 @@ libraryDependencies ++= {
 }
 
 Revolver.settings
-
-assemblySettings

@@ -49,7 +49,7 @@ class BusAlertServiceActor extends Actor with ActorLogging {
     case Start =>
       sender ! "Currently in middle of processing. Wait for your text."
     case CheckForBus =>
-      getBusTime.map(extractBusesWithinRange).map {
+      getBusTime.map(extractBusesWithinRange).onSuccess {
         case Nil => log.info("No buses yet. Scheduling another check in 30 seconds")
           context.system.scheduler.scheduleOnce(30 seconds) {
             self ! CheckForBus
@@ -81,8 +81,10 @@ class BusAlertServiceActor extends Actor with ActorLogging {
     log.debug("Extracting Buses from: " + busTimeResponse)
     busTimeResponse.Siri.ServiceDelivery.StopMonitoringDelivery.
       flatMap(_.MonitoredStopVisit).
-      map(_.MonitoredVehicleJourney).
-      map(b => Bus(b.MonitoredCall.Extensions.Distances, b.PublishedLineName, b.ProgressRate)).
-      filter(b => b.distance.DistanceFromCall >= BusAlertConfig.minBusRange && b.distance.DistanceFromCall <= BusAlertConfig.maxBusRange)
+      collect {
+        case b if b.MonitoredVehicleJourney.MonitoredCall.Extensions.Distances.DistanceFromCall >= BusAlertConfig.minBusRange &&
+          b.MonitoredVehicleJourney.MonitoredCall.Extensions.Distances.DistanceFromCall <= BusAlertConfig.maxBusRange =>
+            Bus(b.MonitoredVehicleJourney.MonitoredCall.Extensions.Distances, b.MonitoredVehicleJourney.PublishedLineName, b.MonitoredVehicleJourney.ProgressRate)
+        }
   }
 }
